@@ -1,0 +1,196 @@
+_schema-version: '3.1'
+ID: hr_usb_2q
+version: 1.0.0
+description: A simple CAP project.
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - rm -rf build/dist
+        - mkdir -p build/dist
+        - rm -rf build/ui-deployer
+        - mkdir -p build/ui-deployer
+    - builder: custom
+      commands:
+        - npm install --production
+        - >-
+          bash -c "cds -v | grep 'cds-dk' || npm i --production --no-save
+          @sap/cds-dk @sap/mdk-tools"
+        - bash -c "export PATH=$PATH:$(pwd)/node_modules/.bin"
+        - cds build --production
+  after-all:
+    - builder: custom
+      commands:
+        - npm install
+modules:
+  - name: hr_usb_2q-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm
+      ignore:
+        - node_modules
+        - package-lock.json
+    requires:
+      - name: hr_usb_2q-service-uaa
+      - name: hr_usb_2q-service-db
+  - name: hr_usb_2q-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      memory: 256MB
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    build-parameters:
+      builder: npm
+      ignore:
+        - node_modules
+        - package-lock.json
+    requires:
+      - name: hr_usb_2q-service-uaa
+      - name: hr_usb_2q-service-db
+      - name: hr_usb_2q-service-destination
+      - name: hr_usb_2q-service-metadata
+      - name: hr_usb_2q-service-connectivity
+      - name: hr_usb_2q-service-logs
+  - name: hr_usb_2q-aux-destinations
+    type: com.sap.application.content
+    parameters:
+      content:
+        subaccount:
+          existing_destinations_policy: update
+          destinations:
+            - Authentication: OAuth2UserTokenExchange
+              Name: hr_usb_2q-service-uaa
+              ServiceInstanceName: hr_usb_2q-uaa
+              ServiceKeyName: hr_usb_2q-uaa-key
+              sap.cloud.service: lcap.hr_usb_2q
+            - Authentication: OAuth2UserTokenExchange
+              Name: hr_usb_2q-app-srv
+              TokenServiceInstanceName: hr_usb_2q-uaa
+              TokenServiceKeyName: hr_usb_2q-uaa-key
+              URL: ~{srv-api/srv-url}
+              sap.cloud.service: lcap.hr_usb_2q
+            - Name: hr_usb_2q-service-html5-apps-repo-host
+              ServiceInstanceName: hr_usb_2q-html5-apps-repo-host
+              ServiceKeyName: hr_usb_2q-html5-apps-repo-host-key
+              sap.cloud.service: lcap.hr_usb_2q
+            - Authentication: OAuth2UserTokenExchange
+              Name: hr_usb_2q-hr_usb_2qService
+              TokenServiceInstanceName: hr_usb_2q-uaa
+              TokenServiceKeyName: hr_usb_2q-uaa-key
+              URL: ~{srv-api/srv-url}/service/hr_usb_2qService
+              sap.cloud.service: lcap.hr_usb_2q
+              sap.applicationdevelopment.actions.enabled: false
+              sap.build.usage: CAP
+              sap.processautomation.enabled: false
+              HTML5.DynamicDestination: false
+              WebIDEEnabled: false
+              MobileEnabled: false
+              AppgyverEnabled: false
+    build-parameters:
+      no-source: true
+    requires:
+      - name: hr_usb_2q-service-uaa
+        parameters:
+          service-key:
+            name: hr_usb_2q-uaa-key
+      - name: srv-api
+      - name: hr_usb_2q-service-html5-apps-repo-host
+        parameters:
+          service-key:
+            name: hr_usb_2q-html5-apps-repo-host-key
+      - name: hr_usb_2q-service-destination
+        parameters:
+          content-target: true
+  - name: hr_usb_2q-launchpad
+    type: html5
+    path: build/launchpad
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - >-
+          npx -p @ui5/cli@^3.0.0 ui5 build --dest dist
+          --include-task=generateCachebusterInfo
+        - bash -c "cd dist && npx bestzip ../../../build/dist/launchpad.zip *"
+        - rm -rf dist
+      _artifactName: launchpad.zip
+      supported-platforms: []
+      build-result: ../../build/dist
+  - name: hr_usb_2q-aux-ui-deployer
+    type: com.sap.application.content
+    path: build/ui-deployer
+    build-parameters:
+      build-result: resources
+      requires:
+        - name: hr_usb_2q-launchpad
+          artifacts:
+            - launchpad.zip
+          target-path: resources
+    requires:
+      - name: hr_usb_2q-service-html5-apps-repo-host
+        parameters:
+          content-target: true
+resources:
+  - type: org.cloudfoundry.managed-service
+    name: hr_usb_2q-service-uaa
+    parameters:
+      service: xsuaa
+      service-plan: application
+      service-name: hr_usb_2q-uaa
+      path: xs-security.json
+      config:
+        oauth2-configuration:
+          redirect-uris:
+            - https://*.${default-domain}/login/*
+        xsappname: hr_usb_2q-${space}
+        role-collections: []
+  - type: org.cloudfoundry.managed-service
+    name: hr_usb_2q-service-db
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+      service-name: hr_usb_2q-db
+  - type: org.cloudfoundry.managed-service
+    name: hr_usb_2q-service-destination
+    parameters:
+      service: destination
+      service-plan: lite
+      service-name: hr_usb_2q-destination
+      config:
+        HTML5Runtime_enabled: true
+        version: 1.0.0
+  - type: org.cloudfoundry.user-provided-service
+    name: hr_usb_2q-service-metadata
+    parameters:
+      service: metadata
+      service-plan: standard
+      service-name: hr_usb_2q-metadata
+      config:
+        default-domain: ${default-domain}
+  - type: org.cloudfoundry.managed-service
+    name: hr_usb_2q-service-connectivity
+    parameters:
+      service: connectivity
+      service-plan: lite
+      service-name: hr_usb_2q-connectivity
+  - type: org.cloudfoundry.managed-service
+    name: hr_usb_2q-service-logs
+    parameters:
+      service: application-logs
+      service-plan: lite
+      service-name: hr_usb_2q-logs
+  - type: org.cloudfoundry.managed-service
+    name: hr_usb_2q-service-html5-apps-repo-host
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+      service-name: hr_usb_2q-html5-apps-repo-host
