@@ -16,7 +16,7 @@ entity JobDescriptions
 
 entity Keywords
 {
-    Job_id : UUID;
+    key Job_id : UUID;
     Keywords : LargeString;
     job_title : Association to one JobDescriptions;
 }
