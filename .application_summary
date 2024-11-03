@@ -1,5 +1,5 @@
 {
   "ProjectOverviewURL": "https://q-2-usb-706kvx5b.launchpad.cfapps.eu10.hana.ondemand.com/lcaphr_usb_2q.hr_usb_2qLaunchpad-1.0.0",
-  "DeployedUTCTime": "2024-10-31T05:02:47.966Z",
+  "DeployedUTCTime": "2024-11-02T14:24:20.143Z",
   "ApplicationLogURL": "https://logs.cf.eu10-005.hana.ondemand.com/app/dashboards#/view/Overview?_g=(filters:!((query:(match_phrase:(component_name:hr_usb_2q-srv)))))"
 }

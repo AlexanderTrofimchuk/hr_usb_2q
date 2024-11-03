@@ -79,8 +79,8 @@ keywordList = [
 valueKeywords = ",".join(f"'{keyword}'" for keyword in keywordList)
 jobID = dbJobDescription[0][1]
 jobTitle = dbJobDescription[0][1]
-sqlCommandKey = "INSERT INTO 5E9E1FB36AF148F39F2AA9F64D1529B9.HR_USB_2QMODEL_KEYWORDS (KEYWORD_ID,JOB_ID,KEYWORDS,JOB_TITLE_JOB_ID) VALUES (?,?,?,?);"
-cursor.execute(sqlCommandKey, (12,jobID,valueKeywords,jobTitle))
+sqlCommandKey = "INSERT INTO 5E9E1FB36AF148F39F2AA9F64D1529B9.HR_USB_2QMODEL_KEYWORDS (JOB_ID,KEYWORDS,JOB_TITLE_JOB_ID) VALUES (?,?,?);"
+cursor.execute(sqlCommandKey, (jobID,valueKeywords,jobTitle))
 
 cursor.close()
 conn.close()
