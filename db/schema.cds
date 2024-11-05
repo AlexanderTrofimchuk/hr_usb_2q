@@ -12,7 +12,7 @@ entity JobDescriptions
     Job_Description : LargeString;
     Job_keywords : Composition of many Keywords on Job_keywords.job_title = $self;
     Job_candidates : Association to many Candidates on Job_candidates.jobDescriptions = $self;
-    Create_date : DateTime;
+    Create_date : Date;
 }
 
 entity Keywords
