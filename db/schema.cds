@@ -43,8 +43,8 @@ entity Candidates
     experience_company : String(300);
     experience_position : String(100);
     experience_description : LargeString;
-    experience_start : Date;
-    experience_end : Date;
+    experience_start : String;
+    experience_end : String;
     professional_roles : String(500);
     skills : LargeString;
     schedule : String(70);
