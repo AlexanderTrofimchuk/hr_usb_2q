@@ -13,6 +13,7 @@ entity JobDescriptions
     Job_keywords : Composition of many Keywords on Job_keywords.job_title = $self;
     Job_candidates : Association to many Candidates on Job_candidates.jobDescriptions = $self;
     Create_date : String(10);
+    Status : String;
 }
 
 entity Keywords
