@@ -53,6 +53,8 @@ entity Candidates
     status : String(50);
     download_pdf_url : String(500);
     download_rtf_url : String(500);
+    candidate_hh_url : String;
     percent_sagesameness : Integer;
+    text_percent_sagesameness : String;
     jobDescriptions : Association to one JobDescriptions;
 }
