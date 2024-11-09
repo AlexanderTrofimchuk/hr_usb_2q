@@ -25,7 +25,7 @@ entity Keywords
 
 entity Candidates
 {
-    key Candidate_ID : UUID;
+    Candidate_ID : String not null;
     first_name : String(200);
     last_name : String(200);
     gender : String(10);
@@ -57,4 +57,5 @@ entity Candidates
     percent_sagesameness : Integer;
     text_percent_sagesameness : String;
     jobDescriptions : Association to one JobDescriptions;
+    key id : UUID;
 }
